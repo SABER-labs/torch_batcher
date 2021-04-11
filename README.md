@@ -7,8 +7,7 @@ nvidia-cuda-mps-control.
 * `pip3 install -r requriments.txt`
 
 ## Usage
-* For Linear Scaling
-** To start mps
+* For Linear Scaling, start nvidia-cuda-mps-control
     ```bash
     nvidia-cuda-mps-control -d # To start
     nvidia-cuda-mps-control # Will enter the command prompt
