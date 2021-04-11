@@ -54,28 +54,29 @@ class BatchInference:
 
     async def forever_loop(self):
         while True:
-            req_counts = await self.redis.llen(BatchInference.request_key)
             for _ in range(self.loop_times):
-                if req_counts <= self.max_batch_size:
+                req_counts = await self.redis.llen(BatchInference.request_key)
+                if req_counts < self.max_batch_size:
                     await asyncio.sleep(self.poll_time_in_ms * 1e-3)
                 else:
                     break
-            tr = self.redis.multi_exec()
-            tr.lrange(BatchInference.request_key, 0, self.max_batch_size - 1)
-            tr.ltrim(BatchInference.request_key, self.max_batch_size, -1)
-            list_of_reqids, _ = await tr.execute()
-            if len(list_of_reqids) > 0:
-                req_ids, texts  = zip(*[unpack_req(req_bin) for req_bin in list_of_reqids])
-                text_padded, input_lengths = gen_text(len(texts))
-                audios = self.infer(text_padded, input_lengths)
-                for i in range(len(req_ids)):
-                    req_id = req_ids[i]
-                    audio = audios[0][i, :, :]
-                    reponse_text = self.audio_to_b64(audio)
-                    await self.redis.publish_json(f'{BatchInference.reponse_key}:{req_id}', {
-                        'req_id': req_id,
-                        'response_text': reponse_text
-                    })
+            if req_counts > 0:
+                tr = self.redis.multi_exec()
+                tr.lrange(BatchInference.request_key, 0, self.max_batch_size - 1)
+                tr.ltrim(BatchInference.request_key, self.max_batch_size, -1)
+                list_of_reqids, _ = await tr.execute()
+                if len(list_of_reqids) > 0:
+                    req_ids, texts  = zip(*[unpack_req(req_bin) for req_bin in list_of_reqids])
+                    text_padded, input_lengths = gen_text(len(texts))
+                    audios = self.infer(text_padded, input_lengths)
+                    for i in range(len(req_ids)):
+                        req_id = req_ids[i]
+                        audio = audios[0][i, :, :]
+                        reponse_text = self.audio_to_b64(audio)
+                        await self.redis.publish_json(f'{BatchInference.reponse_key}:{req_id}', {
+                            'req_id': req_id,
+                            'response_text': reponse_text
+                        })
 
     def audio_to_b64(self, audio):
         return secrets.token_urlsafe(64)
