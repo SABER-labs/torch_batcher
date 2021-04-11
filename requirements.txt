@@ -2,3 +2,6 @@ aioredis
 uvloop
 msgpack
 aiorun
+supervisor
+beautifultable
+numpy

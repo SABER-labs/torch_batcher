@@ -27,7 +27,7 @@ class BatchInference:
         self._warmup()
         self.max_delay_in_ms = 50
         self.poll_time_in_ms = 5 
-        self.max_batch_size = 128
+        self.max_batch_size = 32
         self.loop_times = int(self.max_delay_in_ms / self.poll_time_in_ms)
 
     async def __aenter__(self):

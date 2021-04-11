@@ -6,11 +6,9 @@ class BatchInferenceClient:
 
     async def __aenter__(self):
         self.redis = await aioredis.create_redis_pool('redis://localhost')
-        print("Client Redis pool created")
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
-        print("Client Redis pool closed")
         self.redis.close()
         await self.redis.wait_closed()
 

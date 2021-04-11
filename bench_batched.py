@@ -4,6 +4,9 @@ from itertools import count
 from client import BatchInferenceClient
 import asyncio
 import uvloop
+from beautifultable import BeautifulTable
+from numpy import percentile
+
 
 class Benchmarker:
 
@@ -21,18 +24,18 @@ class Benchmarker:
             start = time.perf_counter()
             time_taken_per_example = await asyncio.gather(*[self.time_per_request(model) for _ in range(num_req)])
             total_time = ((time.perf_counter() - start)*1000)
-            print(f"Average time taken for num_req {num_req} is: {sum(time_taken_per_example)/num_req:.2f}ms")
-            print(f"Total time taken for {num_req} was {total_time:.2f}ms")
+            return total_time, percentile(time_taken_per_example, 50), percentile(time_taken_per_example, 95), percentile(time_taken_per_example, 95)
+
 
 async def main():
     benchmarker = Benchmarker()
-    await benchmarker.benchmark(64)
-    await benchmarker.benchmark(32)
-    await benchmarker.benchmark(16)
-    await benchmarker.benchmark(8)
-    await benchmarker.benchmark(4)
-    await benchmarker.benchmark(2)
-    await benchmarker.benchmark(1)
+    table = BeautifulTable()
+    table.columns.header = ["Batch_Size", "Total time in ms", "p50", "p95", "p99"]
+    for batch_size in [1, 2, 4, 8, 16, 32, 64, 128]:
+        total_time, p_50, p_95, p_99 = await benchmarker.benchmark(batch_size)
+        table.rows.append([batch_size, total_time, p_50, p_95, p_99])
+        print(f"Processed {batch_size} req in {total_time}ms")
+    print(table)
 
 if __name__ == "__main__":
     uvloop.install()
