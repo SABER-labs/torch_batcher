@@ -1,0 +1,4 @@
+aioredis
+uvloop
+msgpack
+aiorun
