@@ -77,6 +77,7 @@ class BatchInference:
                             'response_text': text,
                             'reponse_audio': b64_encoded_audio
                         })
+                    torch.cuda.empty_cache()
 
     def audio_to_b64(self, audio):
         # return base64.b64encode(audio.cpu().numpy())
