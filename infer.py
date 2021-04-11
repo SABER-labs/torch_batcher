@@ -2,10 +2,8 @@ import torch
 from utils import unpack_req
 import aioredis
 import asyncio
-import msgpack
-import secrets
-import time
 from aiorun import run
+import base64
 
 def gen_text(batch_size):
     text_len = 50
@@ -55,7 +53,7 @@ class BatchInference:
     async def forever_loop(self):
         while True:
             for _ in range(self.loop_times):
-                req_counts = await self.redis.llen(BatchInference.request_key)
+                req_counts = await self.redis.llen(BatchInference.request_key) # Takes around 1ms on localhost
                 if req_counts < self.max_batch_size:
                     await asyncio.sleep(self.poll_time_in_ms * 1e-3)
                 else:
@@ -71,15 +69,18 @@ class BatchInference:
                     audios = self.infer(text_padded, input_lengths)
                     for i in range(len(req_ids)):
                         req_id = req_ids[i]
+                        text = texts[i]
                         audio = audios[0][i, :, :]
-                        reponse_text = self.audio_to_b64(audio)
+                        b64_encoded_audio = self.audio_to_b64(audio)
                         await self.redis.publish_json(f'{BatchInference.reponse_key}:{req_id}', {
                             'req_id': req_id,
-                            'response_text': reponse_text
+                            'response_text': text,
+                            'reponse_audio': b64_encoded_audio
                         })
 
     def audio_to_b64(self, audio):
-        return secrets.token_urlsafe(64)
+        # return base64.b64encode(audio.cpu().numpy())
+        return 'BASE64_ENCODED_STRING'
 
     @staticmethod
     async def main_loop():

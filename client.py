@@ -20,4 +20,5 @@ class BatchInferenceClient:
         response = await ch[0].get_json()
         await self.redis.unsubscribe(response_key)
         assert(req_id == response.get("req_id"))
-        return response.get("response_text")
+        assert(text == response.get("response_text"))
+        return response.get("reponse_audio")
