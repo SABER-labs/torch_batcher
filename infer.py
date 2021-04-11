@@ -2,7 +2,6 @@ import torch
 from utils import unpack_req
 import aioredis
 import asyncio
-import uvloop
 import msgpack
 import secrets
 import time
@@ -89,5 +88,4 @@ class BatchInference:
 
 
 if __name__ == "__main__":
-    uvloop.install()
-    run(BatchInference.main_loop())
+    run(BatchInference.main_loop(), use_uvloop=True)
