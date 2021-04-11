@@ -66,7 +66,6 @@ class BatchInference:
             list_of_reqids, _ = await tr.execute()
             if len(list_of_reqids) > 0:
                 req_ids, texts  = zip(*[unpack_req(req_bin) for req_bin in list_of_reqids])
-                print(f'Processing {len(req_ids)} reqs.')
                 text_padded, input_lengths = gen_text(len(texts))
                 audios = self.infer(text_padded, input_lengths)
                 for i in range(len(req_ids)):
